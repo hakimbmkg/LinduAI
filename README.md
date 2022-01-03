@@ -6,3 +6,12 @@ Python Package for Station Quality Analysis and Predicted Magnitude Based on Con
 
 # <b>Installation</b>
 
+python setup.py install
+
+# Requirement
+- python 3.8
+- tensorflow 2.4.1
+- numpy
+- obspy
+- keras
+- librosa

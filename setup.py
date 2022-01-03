@@ -16,17 +16,17 @@ setup(
 	packages=['LinduAI'],
 	install_requires=[
 	'pytest',
-	'numpy',
+	'numpy==1.19.5',
 	'pkginfo',
-	'scipy', 
+	'scipy==1.7.1', 
 	'tensorflow==2.4.1', 
 	'keras', 
 	'matplotlib', 
 	'pandas',
-	'tqdm', 
+	'tqdm==4.62.3', 
 	'h5py', 
 	'obspy',
 	'jupyter'], 
 
-    python_requires='>=3.7',
+    python_requires='>=3.6',
 	)

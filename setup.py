@@ -1,5 +1,5 @@
 import os
-from setuptools import setup
+from setuptools import setup, find_packages
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
@@ -13,7 +13,7 @@ setup(
 	keywords='Station Earthquake Quality Magnitude Prediction CNN ',
 	url='https://github.com/hakimbmkg/LinduAI',
 	long_description=read('README.md'),
-	packages=['LinduAI'],
+	packages=find_packages(),
 	install_requires=[
 	'pytest',
 	'numpy==1.19.5',

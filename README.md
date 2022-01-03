@@ -18,5 +18,5 @@ python setup.py install
 
 # Example
 
-Models.testmodels('/your/path/mseed_waveform')
+```Models.testmodels('/your/path/mseed_waveform')```
 

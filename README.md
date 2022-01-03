@@ -15,3 +15,8 @@ python setup.py install
 - obspy
 - keras
 - librosa
+
+# Example
+
+Models.testmodels('/your/path/mseed_waveform')
+

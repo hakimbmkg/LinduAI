@@ -18,5 +18,10 @@ python setup.py install
 
 # Example
 
-```Models.testmodels('/your/path/mseed_waveform')```
+```
+from LinduAI.main.model import Models
+
+Models.testmodels('/your/path/mseed_waveform')
+
+```
 

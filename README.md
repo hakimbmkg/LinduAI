@@ -15,7 +15,10 @@ Using Conda, make new env conda (*recommended)
 conda create -n linduai python=3.8
 ```
 ```
-pip install -i https://test.pypi.org/simple/ linduai
+pip install tensorflow==2.4.1
+```
+```
+pip install LinduAI
 ```
 
 # Requirement

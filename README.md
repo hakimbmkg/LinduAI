@@ -6,10 +6,6 @@ Python Package for Station Quality Analysis and Predicted Magnitude Based on Con
 
 # <b>Installation</b>
 
-```
-python setup.py install
-```
-
 Using Conda, make new env conda (*recommended)
 ```
 conda create -n linduai python=3.8
@@ -19,6 +15,13 @@ pip install tensorflow==2.4.1
 ```
 ```
 pip install LinduAI
+```
+if pip failed to install LinduAI, you can manual install with 
+
+```git clone https://github.com/hakimbmkg/LinduAI```
+
+```
+python setup.py install
 ```
 
 # Requirement

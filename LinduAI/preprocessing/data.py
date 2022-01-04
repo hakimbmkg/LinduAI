@@ -17,16 +17,19 @@ class Data:
     """
     Class for preprocessing data
     """
-    global client
     global directory
 
-    client  = Client('https://geof.bmkg.go.id/',user='pgn',password='InfoPgn!&#')  #jangan lupa dihapus
     directory = os.getcwd()
     
-    def make_station(net, dayStart, dayEnd, min_lat, max_lat, min_lng, max_lng, **kwargs):
+    def make_station(net, dayStart, dayEnd, min_lat, max_lat, min_lng, max_lng, url,user=None,pawd=None):
         """
         Function for make station list
         """
+
+        url_ = str(url)
+        usr_ = str(user)
+        pwd_ = str(pawd)
+        client = Client(url_,user=usr_,password=pwd_) 
 
         if not os.path.exists(directory+'/input/station/'):
             os.makedirs(directory+'/input/station')
@@ -42,7 +45,7 @@ class Data:
             network=net, level='channel',
             starttime=start_time, endtime=end_time,
             minlatitude=min_lat, maxlatitude=max_lat,
-            minlongitude=min_lng, maxlongitude=max_lng, **kwargs)
+            minlongitude=min_lng, maxlongitude=max_lng)
 
         stations = {}
         for inv_ in tqdm(inv):
@@ -63,10 +66,16 @@ class Data:
             json.dump(stations, file_)
         print(f'process completed, stations.json Created')
 
-    def download_waveform_fromcsv(path):
+    def download_waveform_fromcsv(path, url,user=None,pawd=None):
         """
         function for download waveform from csv file
         """
+
+        url_ = str(url)
+        usr_ = str(user)
+        pwd_ = str(pawd)
+        client = Client(url_,user=usr_,password=pwd_) 
+
         if not os.path.exists(directory+'/input/waveform/'):
             os.makedirs(directory+'/input/waveform')
             print('== folder /input/waveform/ created')

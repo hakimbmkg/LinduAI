@@ -14,14 +14,14 @@ import numpy as np
 import json
 import os
 from tqdm import tqdm
-import time
+
 
 class Eqconvert:
     """
     This is class for convert data from arrival format seiscomp and next step download by event from FDSN 
     """
 
-    def created_station(net, dayStart, dayEnd, min_lat, max_lat, min_lng, max_lng, **kwargs):
+    def created_station(net, dayStart, dayEnd, min_lat, max_lat, min_lng, max_lng, url,user=None,pawd=None):
         """
         Created Station Using Selected Region From FDSN
         This param is : \n
@@ -33,18 +33,28 @@ class Eqconvert:
         max_lat     : [float] - max of latitude
         min_lng     : [float] - min of longitude
         max_lng     : [float] - max of longitude
+        url         : [str] url of FDSN
+        user        : [str] default None
+        pawd        : [str] default None
 
         """
         fd = os.getcwd()
         if not os.path.exists(fd+'/input/dataset_EQ/rawdata/'): 
             os.makedirs(fd+'/input/dataset_EQ/rawdata/')
             print('folder created')
+        else:
+            print('folder is exist')
 
         if not os.path.exists(fd+'/input/dataset_EQ/rawdata/station/'):
             os.makedirs(fd+'/input/dataset_EQ/rawdata/station/')
             print('folder created')
+        else:
+            print('folder is exist')
 
-        c = Client('https://geof.bmkg.go.id/',user='pgn',password='InfoPgn!&#') # don't forget for remove user n pass
+        url_ = str(url)
+        usr_ = str(user)
+        pwd_ = str(pawd)
+        c = Client(url_,user=usr_,password=pwd_) 
         start_t = UTCDateTime(dayStart)
         end_t = UTCDateTime(dayEnd)
 
@@ -52,7 +62,7 @@ class Eqconvert:
             network=net, level='channel',
             starttime=start_t, endtime=end_t,
             minlatitude=min_lat, maxlatitude=max_lat,
-            minlongitude=min_lng, maxlongitude=max_lng, **kwargs)
+            minlongitude=min_lng, maxlongitude=max_lng)
 
         stations = {}
         for inv_ in inv:
@@ -265,10 +275,19 @@ class Eqconvert:
         df.to_csv(path_fd+'/input/dataset_EQ/merge_clear.csv',mode='a', header=True, index=False)
         print (df)
 
-    def downloadseedbycsv(csv_path):
+    def downloadseedbycsv(csv_path, url,user=None, pawd=None):
         """
+        function for download mseed from FDSN
+        This param is : \n
+        csv_path    : /your/path/csv
+        url         : [str] url of FDSN
+        user        : [str] default None
+        pawd        : [str] default None
         """
-        c = Client('https://geof.bmkg.go.id/',user='pgn',password='InfoPgn!&#') # don't forget for remove user n pass
+        url_ = str(url)
+        usr_ = str(user)
+        pwd_ = str(pawd)
+        c = Client(url_,user=usr_,password=pwd_) 
 
         path_fd = os.getcwd()
         df = pd.read_csv(path_fd+'/'+csv_path)

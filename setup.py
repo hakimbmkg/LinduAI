@@ -12,8 +12,7 @@ setup(
 	license='MIT License',
 	keywords='Station Earthquake Quality Magnitude Prediction CNN ',
 	url='https://github.com/hakimbmkg/LinduAI',
-	long_description=read('README.md'),
-	packages=find_packages(),
+	packages=find_packages("src"),
 	install_requires=[
 	'pytest',
 	'numpy==1.19.5',
@@ -23,9 +22,10 @@ setup(
 	'keras', 
 	'matplotlib', 
 	'pandas',
-	'tqdm==4.62.3', 
+	'tqdm', 
 	'h5py', 
 	'obspy',
+	'librosa',
 	'jupyter'], 
 
     python_requires='>=3.6',

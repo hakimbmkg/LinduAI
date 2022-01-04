@@ -32,9 +32,10 @@ pip install LinduAI
 # Example
 
 ```
-from LinduAI.main.model import Models
+from LinduAI.main.modelmag import Modelsmag
 
-Models.testmodels('/your/path/mseed_waveform')
+Modelsmag.predictedmag('/your/path/CISI.IA_20090616044802.645_EV', 'input/your/models_mags')
+
 
 ```
 

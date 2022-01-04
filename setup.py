@@ -21,7 +21,7 @@ setup(
 	'tensorflow==2.4.1', 
 	'keras', 
 	'matplotlib', 
-	'pandas',
+	'pandas==1.3.4',
 	'tqdm', 
 	'h5py', 
 	'obspy',

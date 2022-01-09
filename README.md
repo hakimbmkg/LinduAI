@@ -41,6 +41,7 @@ Modelsmag.predictedmag('/your/path/CISI.IA_20090616044802.645_EV', 'input/your/m
 
 
 * you can used model in folder example (LinduAI_Models)
+* Mseed Event also in folder example
 
 ```
 

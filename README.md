@@ -36,5 +36,7 @@ from LinduAI.main.model import Models
 
 Models.testmodels('/your/path/mseed_waveform')
 
+* you can used model in folder example (LinduAI_Models)
+
 ```
 

@@ -1,0 +1,6 @@
+pytest
+numpy==1.19.5
+pkginfo
+scipy==1.7.1
+obspy
+librosa

@@ -1,0 +1,15 @@
+Metadata-Version: 2.1
+Name: LinduAI
+Version: 0.0.6
+Summary: Python Package for Station Quality Analysis and Predicted Magnitude Based on Convolutional Neural Network
+Home-page: https://github.com/hakimbmkg/LinduAI
+Author: hakimBMKG
+Author-email: arif.hakim@bmkg.go.id
+License: MIT License
+Keywords: Station Earthquake Quality Magnitude Prediction CNN
+Platform: UNKNOWN
+Requires-Python: >=3.8
+License-File: LICENSE
+
+UNKNOWN
+

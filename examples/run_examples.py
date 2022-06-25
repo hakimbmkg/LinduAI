@@ -33,8 +33,8 @@ max_lat   = "8.39"
 min_lng   = "92.93"
 max_lng   = "143.88"
 url       = "https://geof.bmkg.go.id/"
-user      = "pgn"
-passwd    = "InfoPgn!&#"
+user      = "user"
+passwd    = "password#"
 n_epoch   = 15
 
 # EQ Magnitude Classifications

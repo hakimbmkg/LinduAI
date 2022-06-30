@@ -44,4 +44,4 @@ Modelsmag.predictedmag('/your/path/CISI.IA_20090616044802.645_EV', 'input/your/m
 * Mseed Event also in folder example
 
 ```
-test
+

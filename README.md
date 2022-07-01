@@ -47,3 +47,7 @@ Modelsmag.predictedmag('/your/path/CISI.IA_20090616044802.645_EV', 'input/your/m
 
 ```
 
+Cite as
+```
+Hakim, Arif Rachman. (2022). LinduAI (1.0.0). Zenodo. https://doi.org/10.5281/zenodo.6785556
+```

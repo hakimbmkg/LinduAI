@@ -1,6 +1,6 @@
 # LinduAI
 
-<a href="https://doi.org/10.5281/zenodo.6785556"><img width="250" alt="Zenodo-DOI" src="https://zenodo.org/badge/DOI/10.5281/zenodo.6785556.svg"/></a>
+<a href="https://doi.org/10.5281/zenodo.6785556"><img width="150" alt="Zenodo-DOI" src="https://zenodo.org/badge/DOI/10.5281/zenodo.6785556.svg"/></a>
 
 Python Package for Station Quality Analysis and Predicted Magnitude Based on Convolutional Neural Network
 

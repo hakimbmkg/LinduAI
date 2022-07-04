@@ -21,6 +21,13 @@ from obspy import UTCDateTime
 import tensorflow as tf
 import shutil
 
+class HParams(object):
+    """ 
+    
+    """
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
+
 class Transform:
     """
     Class for preprocessing data step two, transform data waveform.
@@ -225,6 +232,277 @@ class Transform:
         print (f'\n ***finished*** \n')
         # print("\n NdasQ Mumet Mas, dikongkon lopang loping wae ... ora mari mari ...!\n")
 
+
+    def conditioning_waveform_typetwo(path):
+        """
+        funtion for conditioning 3 channels, BHZ, BHN, BHE, SHZ, SHN, SHE
+        resample to 100Hz for standardization all mseed
+        """
+        
+        if os.path.exists(directory+'/input/labels_csv/inaseisform_typetwo.csv'):
+            os.remove(directory+'/input/labels_csv/inaseisform_typetwo.csv')
+
+        if os.path.exists(directory+'/input/labels_csv/inaseisform_typetwo_1.csv'):
+            os.remove(directory+'/input/labels_csv/inaseisform_typetwo_1.csv')
+
+        read_csv = pd.read_csv(directory+'/'+path)
+        init_stations = read_csv[['files_name','start_time','end_time','network','stations_code','classID','class']]
+        arr_init_stations = init_stations.to_numpy()
+
+        df = pd.DataFrame(columns=[
+            'id',
+            'files_name',
+            'start_time',
+            'end_time',
+            'network',
+            'stations_code',
+            'channels',
+            'classID',
+            'class'
+        ])
+        df.to_csv(directory+'/input/labels_csv/inaseisform_typetwo.csv', mode='a', header=True, index=False)
+
+        df = pd.DataFrame(columns=[
+            'id',
+            'files_name',
+            'start_time',
+            'end_time',
+            'network',
+            'stations_code',
+            'channels',
+            'classID',
+            'class'
+        ])
+        df.to_csv(directory+'/input/labels_csv/inaseisform_typetwo_1.csv', mode='a', header=True, index=False)
+
+
+        for n,i in enumerate(tqdm(arr_init_stations, desc='Conditioning/Split Process')):
+            st = read(directory+'/input/waveform/'+i[0])
+            st_net  = st[0].stats['network']
+            st_code = st[0].stats['station']
+            st_loc  = st[0].stats['location']
+            st_fn   = st_net+'.'+st_code+'.'+st_loc+'.'
+
+            data_ = {
+                    'id'                : n,
+                    'files_name'        : n,
+                    'start_time'        : str(UTCDateTime(i[1])),
+                    'end_time'          : str(UTCDateTime(i[2])),
+                    'network'           : [i[3]],
+                    'stations_code'     : [i[4]],
+                    'channels'          : 'BH?',
+                    'classID'           : [i[5]],
+                    'class'             : [i[6]]
+                    }
+            df = pd.DataFrame(data_)
+            df.to_csv(directory+'/input/labels_csv/inaseisform_typetwo_1.csv', mode='a', header=False, index=False)
+
+            if st.select(id=st_fn+'BHN'):
+                new_st = st.select(id=st_fn+'BHN')
+                # print(f'resample to 100Hz for station {i[4]}')
+                # print(new_st)
+                new_fnN = str(n)+'_N'
+                data_ = {
+                    'id'                : n,
+                    'files_name'        : new_fnN,
+                    'start_time'        : str(UTCDateTime(i[1])),
+                    'end_time'          : str(UTCDateTime(i[2])),
+                    'network'           : [i[3]],
+                    'stations_code'     : [i[4]],
+                    'channels'          : 'BHN',
+                    'classID'           : [i[5]],
+                    'class'             : [i[6]]
+                    }
+                df = pd.DataFrame(data_)
+                df.to_csv(directory+'/input/labels_csv/inaseisform_typetwo.csv', mode='a', header=False, index=False)
+                try:
+                    if not os.path.exists(directory+'/input/waveform/'+new_fnN):
+                        new_st.write(directory+'/input/waveform/'+new_fnN, format='MSEED')
+                        print(f'Success write mseed file for station {i[4]}')
+                        print(f'===========================================')
+                    else:
+                        print(f'file mseed for station {i[4]} is exist')
+                        print(f'===========================================')
+                except:
+                    print(f'***!warning!*** >> cant write mseed for station {i[4]}')
+
+
+            if st.select(id=st_fn+'BHE'):
+                new_st = st.select(id=st_fn+'BHE')
+                new_fnE = str(n)+'_E' 
+                data_ = {
+                    'id'                : n,
+                    'files_name'        : new_fnE,
+                    'start_time'        : str(UTCDateTime(i[1])),
+                    'end_time'          : str(UTCDateTime(i[2])),
+                    'network'           : [i[3]],
+                    'stations_code'     : [i[4]],
+                    'channels'          : 'BHE',
+                    'classID'           : [i[5]],
+                    'class'             : [i[6]]
+                    }
+                df = pd.DataFrame(data_)
+                df.to_csv(directory+'/input/labels_csv/inaseisform_typetwo.csv', mode='a', header=False, index=False)
+                try:
+                    if not os.path.exists(directory+'/input/waveform/'+new_fnE):
+                        new_st.write(directory+'/input/waveform/'+new_fnE, format='MSEED')
+                        print(f'Success write mseed file for station {i[4]}')
+                        print(f'===========================================')
+                    else:
+                        print(f'file mseed for station {i[4]} is exist')
+                        print(f'===========================================')
+                except:
+                    print(f'***!warning!*** >> cant write mseed for station {i[4]}')
+
+
+
+            if st.select(id=st_fn+'BHZ'):
+                new_st = st.select(id=st_fn+'BHZ')
+                new_fnZ = str(n)+'_Z'
+                data_ = {
+                    'id'                : n,
+                    'files_name'        : new_fnZ,
+                    'start_time'        : str(UTCDateTime(i[1])),
+                    'end_time'          : str(UTCDateTime(i[2])),
+                    'network'           : [i[3]],
+                    'stations_code'     : [i[4]],
+                    'channels'          : 'BHZ',
+                    'classID'           : [i[5]],
+                    'class'             : [i[6]]
+                    }
+                df = pd.DataFrame(data_)
+                df.to_csv(directory+'/input/labels_csv/inaseisform_typetwo.csv', mode='a', header=False, index=False)
+                try:
+                    if not os.path.exists(directory+'/input/waveform/'+new_fnZ):
+                        new_st.write(directory+'/input/waveform/'+new_fnZ, format='MSEED')
+                        print(f'Success write mseed file for station {i[4]}')
+                        print(f'===========================================')
+                    else:
+                        print(f'file mseed for station {i[4]} is exist')
+                        print(f'===========================================')
+                except:
+                    print(f'***!warning!*** >> cant write mseed for station {i[4]}')
+
+                
+            if st.select(id=st_fn+'SHN'):
+                new_st = st.select(id=st_fn+'SHN')
+                new_fnSN = str(n)+'_N'
+                data_ = {
+                    'id'                : n,
+                    'files_name'        : new_fnSN,
+                    'start_time'        : str(UTCDateTime(i[1])),
+                    'end_time'          : str(UTCDateTime(i[2])),
+                    'network'           : [i[3]],
+                    'stations_code'     : [i[4]],
+                    'channels'          : 'SHN',
+                    'classID'           : [i[5]],
+                    'class'             : [i[6]]
+                    }
+                df = pd.DataFrame(data_)
+                df.to_csv(directory+'/input/labels_csv/inaseisform_typetwo.csv', mode='a', header=False, index=False)
+                try:
+                    if not os.path.exists(directory+'/input/waveform/'+new_fnSN):
+                        new_st.write(directory+'/input/waveform/'+new_fnSN, format='MSEED')
+                        print(f'Success write mseed file for station {i[4]}')
+                        print(f'===========================================')
+                    else:
+                        print(f'file mseed for station {i[4]} is exist')
+                        print(f'===========================================')
+                except:
+                    print(f'***!warning!*** >> cant write mseed for station {i[4]}')
+
+                
+            if st.select(id=st_fn+'SHE'):
+                new_st = st.select(id=st_fn+'SHE')
+                new_fnSE = str(n)+'_E'
+                data_ = {
+                    'id'                : n,
+                    'files_name'        : new_fnSE,
+                    'start_time'        : str(UTCDateTime(i[1])),
+                    'end_time'          : str(UTCDateTime(i[2])),
+                    'network'           : [i[3]],
+                    'stations_code'     : [i[4]],
+                    'channels'          : 'SHE',
+                    'classID'           : [i[5]],
+                    'class'             : [i[6]]
+                    }
+                df = pd.DataFrame(data_)
+                df.to_csv(directory+'/input/labels_csv/inaseisform_typetwo.csv', mode='a', header=False, index=False)
+                try:
+                    if not os.path.exists(directory+'/input/waveform/'+new_fnSE):
+                        new_st.write(directory+'/input/waveform/'+new_fnSE, format='MSEED')
+                        print(f'Success write mseed file for station {i[4]}')
+                        print(f'===========================================')
+                    else:
+                        print(f'file mseed for station {i[4]} is exist')
+                        print(f'===========================================')
+                except:
+                    print(f'***!warning!*** >> cant write mseed for station {i[4]}')
+                
+
+            if st.select(id=st_fn+'SHZ'):
+                # new_st = st.select(id=st_fn+'SHZ').resample(100.0)
+                new_fnSZ = str(n)+'_Z'
+
+                data_ = {
+                    'id'                : n,
+                    'files_name'        : new_fnSZ,
+                    'start_time'        : str(UTCDateTime(i[1])),
+                    'end_time'          : str(UTCDateTime(i[2])),
+                    'network'           : [i[3]],
+                    'stations_code'     : [i[4]],
+                    'channels'          : 'SHZ',
+                    'classID'           : [i[5]],
+                    'class'             : [i[6]]
+                    }
+                df = pd.DataFrame(data_)
+                df.to_csv(directory+'/input/labels_csv/inaseisform_typetwo.csv', mode='a', header=False, index=False)
+                try:
+                    if not os.path.exists(directory+'/input/waveform/'+new_fnSZ):
+                        new_st.write(directory+'/input/waveform/'+new_fnSZ, format='MSEED')
+                        print(f'Success write mseed file for station {i[4]}')
+                        print(f'===========================================')
+                    else:
+                        print(f'file mseed for station {i[4]} is exist')
+                        print(f'===========================================')
+                # except:
+                #     print(f'***!warning!*** >> cant write mseed for station {i[4]}')
+                except i.Error as e:
+                    print("line: {}, error: {}".format(n.line_num, e))
+                except StopIteration:
+                    break
+        print (f'\n ***finished*** \n')
+        # print("\n NdasQ Mumet Mas, dikongkon lopang loping wae ... ora mari mari ...!\n")
+
+
+    @tf.function
+    def _normalize_tensorflow(S, hparams):
+        return tf.clip_by_value((S - hparams.min_level_db) / -hparams.min_level_db, 0, 1)
+
+    def _tf_log10(x):
+        numerator = tf.math.log(x)
+        denominator = tf.math.log(tf.constant(10, dtype=numerator.dtype))
+        return numerator / denominator
+
+    def _amp_to_db_tensorflow(x):
+        return 20 * Transform._tf_log10(tf.clip_by_value(tf.abs(x), 1e-5, 1e100))
+
+    def _stft_tensorflow(signals, hparams):
+        return tf.signal.stft(
+            signals,
+            hparams.win_length,
+            hparams.hop_length,
+            hparams.n_fft,
+            pad_end=True,
+            window_fn=tf.signal.hann_window,
+        )
+
+    def spectrogram_tensorflow(y, hparams):
+        D = Transform._stft_tensorflow(y, hparams)
+        S = Transform._amp_to_db_tensorflow(tf.abs(D)) - hparams.ref_level_db
+        return Transform._normalize_tensorflow(S, hparams)
+
+
     def make_spectogram(path):
         if not os.path.exists(directory+'/input/spectogram/'):
             os.makedirs(directory+'/input/spectogram')
@@ -240,44 +518,33 @@ class Transform:
 
             data = st[0].data.astype('float32')
             sr = int(st[0].stats.sampling_rate)
-            max_points = int(st[0].stats.npts)
-            offset = 0
+            hparams = HParams(  
+                # spectrogramming
+                win_length = 256,
+                n_fft = 256,
+                hop_length= 128,
+                ref_level_db = 250000,
+                min_level_db = -250000,
+                # mel scaling
+                num_mel_bins = 128,
+                mel_lower_edge_hertz = 0,
+                mel_upper_edge_hertz = (sr/2),
+                # inversion
+                power = 1, # for spectral inversion
+                griffin_lim_iters = 50,
+                pad=True,
+                #
+            )
+            spectrogram = Transform.spectrogram_tensorflow(data.astype('float32'), hparams)
+            fig, ax = plt.subplots(ncols=1, figsize=(5,5))
+            cax = ax.matshow(spectrogram.numpy().T, aspect='auto', origin='lower')
+            # fig.colorbar(cax)
+            ax.axis('off')
+            fig.savefig(directory+'/input/spectogram/'+i[0]+'.png', bbox_inches='tight',pad_inches = 0, dpi=100)
+    
 
-            hop_length = 128
-            n_fft = 256
-            cmap = 'jet'
-            bins_per_octave = 12
-            auto_aspect = False
-            y_axis = "linear"  # linear or log
-            fmin = None
-            fmax = 5.0
-
-            # Librosa spectrogram
-            D = librosa.amplitude_to_db(
-                np.abs(librosa.stft(data, hop_length=hop_length, n_fft=n_fft)), ref=np.max)
-
-            fig, ax = plt.subplots()
-
-            img = librosa.display.specshow(D, y_axis=y_axis, sr=sr,
-                                           hop_length=hop_length, x_axis='time', ax=ax, cmap=cmap, bins_per_octave=bins_per_octave,
-                                           auto_aspect=auto_aspect)
-
-            if fmin is not None:
-                fmin0 = fmin
-            else:
-                fmin0 = 0
-
-            if fmax is not None:
-                fmax0 = fmax
-            else:
-                fmax0 = sr/2
-
-            ax.set_ylim([fmin, fmax])
-            fig.colorbar(img, ax=ax, format="%+2.f dB")
-            plt.savefig(directory+'/input/spectogram/'+i[0]+'.png', bbox_inches='tight', dpi=300)
-            plt.close()
-
-
+    #be carefull for used ths function, please check again,
+    #this function used librosa
     @tf.function
     def make_spectogram_mags(path):
         if not os.path.exists(directory+'/input/dataset_EQ/spectogram/'):

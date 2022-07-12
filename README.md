@@ -17,7 +17,7 @@ pip install tensorflow==2.4.1
 ```
 
 ```
-git clone https://github.com/hakimbmkg/LinduAI```
+git clone https://github.com/hakimbmkg/LinduAI
 ```
 
 ```

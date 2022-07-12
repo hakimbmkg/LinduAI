@@ -14,6 +14,7 @@ import numpy as np
 import json
 import os
 from tqdm import tqdm
+import concurrent.futures
 
 
 class Eqconvert:
@@ -103,6 +104,10 @@ class Eqconvert:
             os.makedirs(path_fd+'/input')
             print('folder input created')
 
+        if not os.path.exists(path_fd+"/input/dataset_EQ/"):
+            os.makedirs(path_fd+"/input/dataset_EQ/")
+            print('folder dataset_EQ created')
+            
         if os.path.exists(path_fd+"/input/dataset_EQ/merge.csv"):
             os.remove(path_fd+"/input/dataset_EQ/merge.csv")
 
@@ -275,7 +280,7 @@ class Eqconvert:
         df.to_csv(path_fd+'/input/dataset_EQ/merge_clear.csv',mode='a', header=True, index=False)
         print (df)
 
-    def downloadseedbycsv(csv_path, url,user=None, pawd=None):
+    def downloadseedbycsv(csv_path, url,user=None, pawd=None, n_cpu = os.cpu_count()):
         """
         function for download mseed from FDSN
         This param is : \n
@@ -292,44 +297,71 @@ class Eqconvert:
         path_fd = os.getcwd()
         df = pd.read_csv(path_fd+'/'+csv_path)
         a = df[['network_code','receiver_code','p_arrival_sample','date_','trace_name']]
-        # print(a)
-        arr_a = a.to_numpy()
-        for i in arr_a:
-            try:
-                t1 = UTCDateTime(i[3]+'T'+i[2])
-                t2 = t1 + 180
-                st = c.get_waveforms(i[0],i[1],'00','BHZ',t1,t2)
-                # print(st)
-            except:
+        
+        #parallel init
+        split_df = np.array_split(a,n_cpu)
+        df_results = []
+        
+        def work(x):
+            df = x
+            arr_df = df.to_numpy()
+            for i in arr_df:
                 try:
                     t1 = UTCDateTime(i[3]+'T'+i[2])
                     t2 = t1 + 180
-                    st = c.get_waveforms(i[0],i[1],'01','BHZ',t1,t2)
+                    st = c.get_waveforms(i[0],i[1],'00','BHZ',t1,t2)
                     fn = i[4]
                     # print(st)
                 except:
                     try:
                         t1 = UTCDateTime(i[3]+'T'+i[2])
                         t2 = t1 + 180
-                        st = c.get_waveforms(i[0],i[1],'*','BHZ',t1,t2)
+                        st = c.get_waveforms(i[0],i[1],'01','BHZ',t1,t2)
                         fn = i[4]
                         # print(st)
                     except:
-                        print(f'***!warning!*** >> station '+i[1]+' - '+ i[4]+' is null')
-                        st = 'null'
-                        df.drop(df.loc[df['trace_name']==i[4]].index, inplace=True)
-                        df.to_csv(path_fd+'/input/dataset_EQ/merge_stream.csv', header=True, index=False)
-                        # print (df)
+                        try:
+                            t1 = UTCDateTime(i[3]+'T'+i[2])
+                            t2 = t1 + 180
+                            st = c.get_waveforms(i[0],i[1],'*','BHZ',t1,t2)
+                            fn = i[4]
+                            # print(st)
+                        except:
+                            print(f'***!warning!*** >> station '+i[1]+' - '+ i[4]+' is null')
+                            st = 'null'
+                            df.drop(df.loc[df['trace_name']==i[4]].index, inplace=True)
+                            #df.to_csv(path_fd+'/input/dataset_EQ/x_merge_stream.csv', header=True, index=False)
+                            # print (df)
 
-            if st != 'null':
-                file_path = str(path_fd+'/input/dataset_EQ/event/'+fn)
+                if st != 'null':
+                    file_path = str(path_fd+'/input/dataset_EQ/event/'+fn)
+                    try:
+                        if not os.path.isfile(file_path):
+                            st.write(file_path, format='MSEED')
+                            print(f'==> mseed write for station '+ i[0] +'_'+ i[1])
+                    except:
+                        print(f'## error write file ##')
+            return(df)
+
+        #parallel run
+        with concurrent.futures.ThreadPoolExecutor(max_workers=n_cpu) as executor:
+            results = [ executor.submit(work,x=df) for df in split_df ]
+            for z in concurrent.futures.as_completed(results):
                 try:
-                    if not os.path.isfile(file_path):
-                        st.write(file_path, format='MSEED')
-                        print(f'==> mseed write for station '+ i[0] +'_'+ i[1])
-                except:
-                    print(f'## error write file ##')
-
+                    df_results.append(z.result())
+                except Exception as ex:
+                    print(str(ex))
+                    pass
+        
+        #output processing
+        df_results = pd.concat(df_results)
+        df_results['marker'] = 1
+        joined = pd.merge(df,df_results, on = ['network_code','receiver_code','p_arrival_sample','date_','trace_name'], how='left')
+        joined = joined[~pd.isnull(joined['marker'])]
+        joined.drop(labels = 'marker', axis = 1,inplace=True)
+        joined.to_csv(path_fd+'/input/dataset_EQ/merge_stream.csv', header=True, index=False)
+        print('***download finish***')
+        
     def checkwaveform(path_wave):
         st = read(path_wave)
         st.plot()

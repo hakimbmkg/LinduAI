@@ -12,10 +12,11 @@ Using Conda, make new env conda (*recommended)
 ```
 conda create -n linduai python=3.8
 ```
+
 ```
 pip install tensorflow==2.4.1
 ```
-
+or clone for repository
 ```
 git clone https://github.com/hakimbmkg/LinduAI
 ```

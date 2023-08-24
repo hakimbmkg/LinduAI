@@ -29,7 +29,7 @@ np.random.seed(seed)
 @tf.function
 class Datas:
     """
-    class for conditioning data, ex: split train and test, shuffle data, and merge to hdf5 file for datase
+    class for conditioning data, ex: split train and test, shuffle data, and merge to hdf5 file for dataset
     """
 
     global directory

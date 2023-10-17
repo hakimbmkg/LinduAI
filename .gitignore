@@ -1,0 +1,7 @@
+# ignore credential dataset and input upload
+input/
+dataset/
+
+# ignore main upload
+main.py
+main.ipynb

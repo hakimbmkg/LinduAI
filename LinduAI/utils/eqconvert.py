@@ -329,8 +329,7 @@ class Eqconvert:
         # writing files
         with open(os.path.join(dataset_path,'station','stations.json'), 'w') as file_:
             json.dump(stations, file_)
-        
-            
+               
     def _arrivalconvert_(dataset_path,arrival_fname,format="stead"):
         # inner function
         def _change_trigger(bool_d, name):
@@ -648,6 +647,9 @@ class Eqconvert:
                             'ID'                   :   [None], 
                             }
                         df = pd.concat([df,pd.DataFrame(phadata_)])
+                elif "missing" in line.lower():
+                    # ignore missing pick 
+                    pass
                 else:
                     pass
                 
@@ -688,22 +690,23 @@ class Eqconvert:
         df.to_csv(path_fd+'/input/dataset_EQ/merge_clear.csv',mode='a', header=True, index=False)
         print (df)
 
-    def downloadseedbycsv(csv_path, url,user=None, pawd=None, n_cpu = os.cpu_count()):
+    def downloadseedbycsv(dataset_path,csv_filename,url,data_type='event',user=None, pawd=None, n_cpu = os.cpu_count()):
         """
         function for download mseed from FDSN
-        This param is : \n
-        csv_path    : /your/path/csv
-        url         : [str] url of FDSN
-        user        : [str] default None
-        pawd        : [str] default None
+        Parameters      : \n
+        dataset_path    : absolute path of dataset folder
+        csv_filename    : [str] csv filename with extension
+        url             : [str] url of FDSN
+        user            : [str] default None
+        pawd            : [str] default None
         """
         url_ = str(url)
         usr_ = str(user)
         pwd_ = str(pawd)
-        c = Client(url_,user=usr_,password=pwd_) 
+        client = Client(url_,user=usr_,password=pwd_) 
 
-        path_fd = os.getcwd()
-        df = pd.read_csv(path_fd+'/'+csv_path)
+        path = os.path.join(dataset_path,'waveform',data_type)
+        df = pd.read_csv(os.path.join(dataset_path,'arrival',csv_filename))
         a = df[['network_code','receiver_code','p_arrival_sample','date_','trace_name']]
         
         #parallel init
@@ -717,21 +720,21 @@ class Eqconvert:
                 try:
                     t1 = UTCDateTime(i[3]+'T'+i[2])
                     t2 = t1 + 180
-                    st = c.get_waveforms(i[0],i[1],'00','BHZ',t1,t2)
+                    st = client.get_waveforms(i[0],i[1],'00','BHZ',t1,t2)
                     fn = i[4]
                     # print(st)
                 except:
                     try:
                         t1 = UTCDateTime(i[3]+'T'+i[2])
                         t2 = t1 + 180
-                        st = c.get_waveforms(i[0],i[1],'01','BHZ',t1,t2)
+                        st = client.get_waveforms(i[0],i[1],'01','BHZ',t1,t2)
                         fn = i[4]
                         # print(st)
                     except:
                         try:
                             t1 = UTCDateTime(i[3]+'T'+i[2])
                             t2 = t1 + 180
-                            st = c.get_waveforms(i[0],i[1],'*','BHZ',t1,t2)
+                            st = client.get_waveforms(i[0],i[1],'*','BHZ',t1,t2)
                             fn = i[4]
                             # print(st)
                         except:
@@ -742,7 +745,7 @@ class Eqconvert:
                             # print (df)
 
                 if st != 'null':
-                    file_path = str(path_fd+'/input/dataset_EQ/event/'+fn)
+                    file_path = os.path.join(path,fn)
                     try:
                         if not os.path.isfile(file_path):
                             st.write(file_path, format='MSEED')
@@ -767,14 +770,14 @@ class Eqconvert:
         joined = pd.merge(df,df_results, on = ['network_code','receiver_code','p_arrival_sample','date_','trace_name'], how='left')
         joined = joined[~pd.isnull(joined['marker'])]
         joined.drop(labels = 'marker', axis = 1,inplace=True)
-        joined.to_csv(path_fd+'/input/dataset_EQ/merge_stream.csv', header=True, index=False)
+        joined.to_csv(os.path.join(path,'merge_stream.csv'), header=True, index=False)
         print('***download finish***')
         
     def checkwaveform(path_wave):
         st = read(path_wave)
         st.plot()
 
-    def _df2dat(df,evnum=0,path=os.getcwd(),fname='output.dat',mode='w',azgap=False,absolute=False,verbose=True):
+    def _df2dat_(df,evnum=0,path=os.getcwd(),fname='output.dat',mode='w',azgap=False,absolute=False,verbose=True):
     
         #if evnum != 0 then remake event number by the evnum input as first event number
         if evnum != 0 and absolute == False:

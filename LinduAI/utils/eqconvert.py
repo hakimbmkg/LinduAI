@@ -149,7 +149,7 @@ class Eqconvert:
             'trace_start_time',
             'trace_category',
             'trace_name'])
-
+        
         df.to_csv(path_fd+'/input/dataset_EQ/merge.csv',mode='a', header=True, index=False)
 
 
@@ -401,6 +401,7 @@ class Eqconvert:
                         'trace_start_time',
                         'trace_category',
                         'trace_name'])
+            columns_ = df.columns
             df.to_csv(os.path.join(path,Path(arrival_fname).stem+".csv"),mode='a', header=True, index=False)
         # define outputfile for pha format
         elif format == "pha":
@@ -439,7 +440,7 @@ class Eqconvert:
         # run
         fin = open(os.path.join(path,arrival_fname),'r')
         lines = fin.readlines()
-        for i, line in enumerate(lines):
+        for i, line in enumerate(tqdm(lines)):
             # skip header
             if "for 1 event:" in line.lower():
                 continue
@@ -533,7 +534,8 @@ class Eqconvert:
                             }
                     df = pd.concat([df,pd.DataFrame(phaheader_)])
                     
-                elif len(line.split()) > 3 and "sta" not in line.lower():
+                elif len(line.split()) > 3 and ("sta" not in line.lower()) and ("missing" not in line.lower()):    
+                    
                     net_ = line.split()[1]
                     sta_ = line.split()[0]
                     source_dist_deg_ = line.split()[2]
@@ -647,9 +649,6 @@ class Eqconvert:
                             'ID'                   :   [None], 
                             }
                         df = pd.concat([df,pd.DataFrame(phadata_)])
-                elif "missing" in line.lower():
-                    # ignore missing pick 
-                    pass
                 else:
                     pass
                 
@@ -658,7 +657,7 @@ class Eqconvert:
                 #save data stead
                 if format == "stead":
                     df = df.replace('',np.nan).groupby('receiver_code', as_index=False).first().fillna('')
-                    df.to_csv(os.path.join(path,Path(arrival_fname).stem+".csv"),mode='a', header=False, index=False)
+                    df[columns_].to_csv(os.path.join(path,Path(arrival_fname).stem+".csv"),mode='a', header=False, index=False)
                     # pruge df
                     df = df[0:0]
                 #save data pha
@@ -667,7 +666,7 @@ class Eqconvert:
                     Eqconvert._df2dat(df,evnum=0,path=path,fname=Path(arrival_fname).stem+'.dat', mode = 'a', verbose=False)
                     # pruge df
                     df = df[0:0]    
-                print(f"processing {eventid_}")
+                # print(f"processing {eventid_}")
                 event_counter += 1
                 trigger_counter = 0
         # return 0

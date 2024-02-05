@@ -264,7 +264,7 @@ class Eqconvert:
     
         Eqconvert.csvcleaning('/input/dataset_EQ/merge.csv')
     
-    def _getstation_(net, dayStart, dayEnd, min_lat, max_lat, min_lon, max_lon, url,user=None,pawd=None, dataset_path=os.getcwd()):
+    def _getstation_(net, dayStart, dayEnd, min_lat, max_lat, min_lon, max_lon, url,user=None,pawd=None, dataset_path=os.getcwd(), station_filename=None):
         """
         Create station database in JSON Format from connected FDSN based on location and time period
         Parameters      : \n
@@ -311,11 +311,25 @@ class Eqconvert:
                 lon_ = st.longitude
                 all_channel = [ch.code for ch in st.channels]
                 
-                # channel priority SH - BH - none
-                if len(list(filter(lambda x: x[0:2]=='SH',all_channel))) == 3 :
-                    ch_ = list(filter(lambda x: x[0:2]=='SH',all_channel))
-                elif len(list(filter(lambda x: x[0:2]=='BH',all_channel))) == 3:
-                    ch_ = list(filter(lambda x: x[0:2]=='BH',all_channel))
+                # channel priority SH[ENZ] - SH[12Z] - BH[ENZ] - BH[12Z] - HH[ENZ] - HH[12Z] - none
+                if len(list(set(filter(lambda x: (x[0:2]=='SH'),all_channel)))) > 0:
+                    if len(list(set(filter(lambda x: (x[0:2]=='SH') and x[2:].isalpha(),all_channel)))) == 3:
+                        ch_ = list(set(filter(lambda x: (x[0:2]=='SH') and x[2:].isalpha(),all_channel)))
+                    else:
+                        ch_ = list(set(filter(lambda x: x[0:2]=='SH',all_channel)))
+                    ch_.sort()
+                elif len(list(set(filter(lambda x: x[0:2]=='BH',all_channel)))) > 0:
+                    if len(list(set(filter(lambda x: (x[0:2]=='BH') and x[2:].isalpha(),all_channel)))) == 3:
+                        ch_ = list(set(filter(lambda x: (x[0:2]=='BH') and x[2:].isalpha(),all_channel)))
+                    else:
+                        ch_ = list(set(filter(lambda x: x[0:2]=='BH',all_channel)))
+                    ch_.sort()
+                elif len(list(set(filter(lambda x: x[0:2]=='HH',all_channel)))) > 0:
+                    if len(list(set(filter(lambda x: (x[0:2]=='HH') and x[2:].isalpha(),all_channel)))) == 3:
+                        ch_ = list(set(filter(lambda x: (x[0:2]=='HH') and x[2:].isalpha(),all_channel)))
+                    else:
+                        ch_ = list(set(filter(lambda x: x[0:2]=='HH',all_channel)))
+                    ch_.sort()
                 else:
                     ch_= []
                 
@@ -327,8 +341,12 @@ class Eqconvert:
                     }
         
         # writing files
-        with open(os.path.join(dataset_path,'station','stations.json'), 'w') as file_:
-            json.dump(stations, file_)
+        if station_filename:
+            with open(os.path.join(dataset_path,'station',station_filename), 'w') as file_:
+                json.dump(stations, file_)
+        else:
+            with open(os.path.join(dataset_path,'station','stations.json'), 'w') as file_:
+                json.dump(stations, file_)
                
     def _arrivalconvert_(dataset_path,arrival_fname,format="stead"):
         # inner function
@@ -549,6 +567,7 @@ class Eqconvert:
                         lon_sta_ = float(station_dict[sta_]['coords'][1])
                         elev_sta_ = float(station_dict[sta_]['coords'][2])
                     else: # if station is not available in station data 
+                        receiver_type_ = None
                         lat_sta_ = None
                         lon_sta_ = None
                         elev_sta_ = None
@@ -604,8 +623,8 @@ class Eqconvert:
                             's_weight'                      :   [s_weight_], ### done ###
                             's_travel_sec'                  :   [p_travel_sec_], ### done ###
                             'source_id'                     :   [eventid_], ### done ###
-                            'date_'                         :   [date_.strftime("%d/%m/%Y")], ### done ###
-                            'source_origin_time'            :   [datetime_.strftime("%d/%m/%Y %H:%M:%S.%f")], ### done ###
+                            'date_'                         :   [date_.strftime("%Y/%m/%d")], ### done ###
+                            'source_origin_time'            :   [datetime_.strftime("%Y/%m/%d %H:%M:%S.%f")], ### done ###
                             'source_origin_uncertainty_sec' :   [time_uncertainty_sec_], ### done ###
                             'source_latitude'               :   [lat_], ### done ###
                             'source_longitude'              :   [lon_], ### done ###
@@ -625,7 +644,7 @@ class Eqconvert:
                             'coda_end_sample'               :   ['None'],
                             'trace_start_time'              :   ['None'],
                             'trace_category'                :   ['None'],
-                            'trace_name'                    :   [sta_+'.'+net_+'_'+datetime_.strftime("%d%m%Y%H%M%S.%f")+'_EV']
+                            'trace_name'                    :   [sta_+'.'+net_+'_'+datetime_.strftime("%Y%m%d%H%M%S.%f")+'_EV']
                             }
                         df = pd.concat([df,pd.DataFrame(data_)])
                     
@@ -689,7 +708,7 @@ class Eqconvert:
         df.to_csv(path_fd+'/input/dataset_EQ/merge_clear.csv',mode='a', header=True, index=False)
         print (df)
 
-    def downloadseedbycsv(dataset_path,csv_filename,url,data_type='event',user=None, pawd=None, n_cpu = os.cpu_count()):
+    def downloadseedbycsv(dataset_path,csv_filename,url,data_type='event',user=None, pawd=None, n_cpu = os.cpu_count(),time_before_p = 30, time_after_p = 120): 
         """
         function for download mseed from FDSN
         Parameters      : \n
@@ -705,10 +724,15 @@ class Eqconvert:
         client = Client(url_,user=usr_,password=pwd_) 
 
         path = os.path.join(dataset_path,'waveform',data_type)
-        df = pd.read_csv(os.path.join(dataset_path,'arrival',csv_filename))
-        a = df[['network_code','receiver_code','p_arrival_sample','date_','trace_name']]
         
-        #parallel init
+        if not os.path.exists(path):
+            os.mkdir(path)
+        else:
+            print(f"{path} exist")
+        df = pd.read_csv(os.path.join(dataset_path,'arrival',csv_filename))
+        a = df[['network_code','receiver_code','receiver_type','p_arrival_sample','date_','trace_name']]
+        
+        # parallel init
         split_df = np.array_split(a,n_cpu)
         df_results = []
         
@@ -717,31 +741,33 @@ class Eqconvert:
             arr_df = df.to_numpy()
             for i in arr_df:
                 try:
-                    t1 = UTCDateTime(i[3]+'T'+i[2])
-                    t2 = t1 + 180
-                    st = client.get_waveforms(i[0],i[1],'00','BHZ',t1,t2)
-                    fn = i[4]
-                    # print(st)
+                    t1 = UTCDateTime(i[4]+'T'+i[3])-time_before_p
+                    t2 = t1+time_after_p
+                    st = client.get_waveforms(i[0],i[1],'00',f'{i[2]}Z',t1,t2)
+                    fn = i[5]
                 except:
                     try:
-                        t1 = UTCDateTime(i[3]+'T'+i[2])
-                        t2 = t1 + 180
-                        st = client.get_waveforms(i[0],i[1],'01','BHZ',t1,t2)
-                        fn = i[4]
-                        # print(st)
+                        t1 = UTCDateTime(i[4]+'T'+i[3])-time_before_p
+                        t2 = t1+time_after_p
+                        st = client.get_waveforms(i[0],i[1],'01',f'{i[2]}Z',t1,t2)
+                        fn = i[5]
                     except:
                         try:
-                            t1 = UTCDateTime(i[3]+'T'+i[2])
-                            t2 = t1 + 180
-                            st = client.get_waveforms(i[0],i[1],'*','BHZ',t1,t2)
-                            fn = i[4]
-                            # print(st)
+                            t1 = UTCDateTime(i[4]+'T'+i[3])-time_before_p
+                            t2 = t1+time_after_p
+                            st = client.get_waveforms(i[0],i[1],'10',f'{i[2]}Z',t1,t2)
+                            fn = i[5]
                         except:
-                            print(f'***!warning!*** >> station '+i[1]+' - '+ i[4]+' is null')
-                            st = 'null'
-                            df.drop(df.loc[df['trace_name']==i[4]].index, inplace=True)
-                            #df.to_csv(path_fd+'/input/dataset_EQ/x_merge_stream.csv', header=True, index=False)
-                            # print (df)
+                            try:
+                                t1 = UTCDateTime(i[4]+'T'+i[3])-time_before_p
+                                t2 = t1+time_after_p
+                                st = client.get_waveforms(i[0],i[1],'*',f'{i[2]}Z',t1,t2)
+                                fn = i[5]
+                            except:
+                                print(f'***!warning!*** >> station '+i[1]+' - '+ i[5]+' is null')
+                                st = 'null'
+                                df.drop(df.loc[df['trace_name']==i[5]].index, inplace=True)
+
 
                 if st != 'null':
                     file_path = os.path.join(path,fn)
@@ -753,7 +779,7 @@ class Eqconvert:
                         print(f'## error write file ##')
             return(df)
 
-        #parallel run
+        # parallel run
         with concurrent.futures.ThreadPoolExecutor(max_workers=n_cpu) as executor:
             results = [ executor.submit(work,x=df) for df in split_df ]
             for z in concurrent.futures.as_completed(results):
@@ -763,13 +789,19 @@ class Eqconvert:
                     print(str(ex))
                     pass
         
-        #output processing
+        # output processing
         df_results = pd.concat(df_results)
         df_results['marker'] = 1
-        joined = pd.merge(df,df_results, on = ['network_code','receiver_code','p_arrival_sample','date_','trace_name'], how='left')
-        joined = joined[~pd.isnull(joined['marker'])]
-        joined.drop(labels = 'marker', axis = 1,inplace=True)
-        joined.to_csv(os.path.join(path,'merge_stream.csv'), header=True, index=False)
+        df_downloaded = pd.merge(df,df_results, on = ['network_code','receiver_code','receiver_type','p_arrival_sample','date_','trace_name'], how='left')
+        # make df
+        df_failed = df_downloaded[pd.isnull(df_downloaded['marker'])]
+        df_downloaded = df_downloaded[~pd.isnull(df_downloaded['marker'])]
+        # drop marker
+        df_failed.drop(labels = 'marker', axis = 1,inplace=True)
+        df_downloaded.drop(labels = 'marker', axis = 1,inplace=True)
+        # save file
+        df_failed.to_csv(os.path.join(os.path.dirname(path),f'{Path(csv_filename).stem}_failed_to_download.csv'), header=True, index=False)
+        df_downloaded.to_csv(os.path.join(os.path.dirname(path),f'{Path(csv_filename).stem}_downloaded.csv'), header=True, index=False)
         print('***download finish***')
         
     def checkwaveform(path_wave):
@@ -826,3 +858,24 @@ class Eqconvert:
         else: 
             return print("Output finish: {} at {}".format(fname,path))
     
+    def _update_csv_with_station_(dataset_path,csv_filename,station_path=None):
+        # reading file
+        df = pd.read_csv(os.path.join(dataset_path,'arrival',csv_filename),na_values="NaN")
+        if station_path:
+            station_dict = json.load(open(station_path))
+        else:
+            station_dict = json.load(open(os.path.join(dataset_path,'station','stations.json')))
+        
+        # select and import station data to csv
+        for index, row in df[(df.receiver_type.isna())].iterrows():
+            if row['receiver_code'] in station_dict.keys():
+                df.at[index,"receiver_type"] = station_dict[row["receiver_code"]]['channels'][0][:2]
+                df.at[index,"receiver_latitude"] = station_dict[row["receiver_code"]]["coords"][0]
+                df.at[index,"receiver_longitude"] = station_dict[row["receiver_code"]]["coords"][1]
+                df.at[index,"receiver_elevation_m"] = station_dict[row["receiver_code"]]["coords"][2]
+            else:
+                pass
+        
+        # saving files
+        df.to_csv(os.path.join(dataset_path,'arrival',csv_filename), index=False)
+        

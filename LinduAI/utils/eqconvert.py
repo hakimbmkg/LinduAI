@@ -708,7 +708,7 @@ class Eqconvert:
         df.to_csv(path_fd+'/input/dataset_EQ/merge_clear.csv',mode='a', header=True, index=False)
         print (df)
 
-    def downloadseedbycsv(dataset_path,csv_filename,url,data_type='event',user=None, pawd=None, n_cpu = os.cpu_count(),time_before_p = 30, time_after_p = 120): 
+    def downloadseedbycsv(dataset_path,csv_filename,url,data_type='event',user=None, pawd=None, dl_channel="all", n_cpu = os.cpu_count()/2,time_before_p = 30, time_after_p = 120): 
         """
         function for download mseed from FDSN
         Parameters      : \n
@@ -717,6 +717,7 @@ class Eqconvert:
         url             : [str] url of FDSN
         user            : [str] default None
         pawd            : [str] default None
+        dl_channel      : [str] channel to be downloaded - default all, could be 'all','vertical', or 'horizontal'
         """
         url_ = str(url)
         usr_ = str(user)
@@ -729,39 +730,69 @@ class Eqconvert:
             os.mkdir(path)
         else:
             print(f"{path} exist")
-        df = pd.read_csv(os.path.join(dataset_path,'arrival',csv_filename))
+        df = pd.read_csv(os.path.join(dataset_path,'arrival',csv_filename), low_memory=False)
         a = df[['network_code','receiver_code','receiver_type','p_arrival_sample','date_','trace_name']]
+        
+        # load station json
+        station_dict = json.load(open(os.path.join(dataset_path,'station','stations.json')))
+        station_dict2 = json.load(open(os.path.join(dataset_path,'station','stations_2009_2015.json')))
         
         # parallel init
         split_df = np.array_split(a,n_cpu)
         df_results = []
         
-        def work(x):
-            df = x
+        def work(df,dl_channel):
             arr_df = df.to_numpy()
             for i in arr_df:
+                if dl_channel == 'vertical':
+                    try:
+                        channel_string = station_dict[i[1]]['channels'][0]
+                    except:
+                        try:
+                            channel_string = station_dict2[i[1]]['channels'][0]
+                        except:
+                            print(f'station {i[1]} not found in databases')
+                elif dl_channel == 'horizontal':
+                    try:
+                        channel_string = ",".join(station_dict[i[1]]['channels'][1:3])
+                    except:
+                        try:
+                            channel_string = ",".join(station_dict2[i[1]]['channels'][1:3])
+                        except:
+                            print(f'station {i[1]} not found in databases')
+                elif dl_channel == 'all':
+                    try:
+                        channel_string = ",".join(station_dict[i[1]]['channels'])
+                    except:
+                        try:
+                            channel_string = ",".join(station_dict2[i[1]]['channels'])
+                        except:
+                            print(f'station {i[1]} not found in databases')
+                else:
+                    channel_string = dl_channel
+                    
                 try:
                     t1 = UTCDateTime(i[4]+'T'+i[3])-time_before_p
                     t2 = t1+time_after_p
-                    st = client.get_waveforms(i[0],i[1],'00',f'{i[2]}Z',t1,t2)
+                    st = client.get_waveforms(i[0],i[1],'00',channel_string,t1,t2)
                     fn = i[5]
                 except:
                     try:
                         t1 = UTCDateTime(i[4]+'T'+i[3])-time_before_p
                         t2 = t1+time_after_p
-                        st = client.get_waveforms(i[0],i[1],'01',f'{i[2]}Z',t1,t2)
+                        st = client.get_waveforms(i[0],i[1],'01',channel_string,t1,t2)
                         fn = i[5]
                     except:
                         try:
                             t1 = UTCDateTime(i[4]+'T'+i[3])-time_before_p
                             t2 = t1+time_after_p
-                            st = client.get_waveforms(i[0],i[1],'10',f'{i[2]}Z',t1,t2)
+                            st = client.get_waveforms(i[0],i[1],'10',channel_string,t1,t2)
                             fn = i[5]
                         except:
                             try:
                                 t1 = UTCDateTime(i[4]+'T'+i[3])-time_before_p
                                 t2 = t1+time_after_p
-                                st = client.get_waveforms(i[0],i[1],'*',f'{i[2]}Z',t1,t2)
+                                st = client.get_waveforms(i[0],i[1],'*',channel_string,t1,t2)
                                 fn = i[5]
                             except:
                                 print(f'***!warning!*** >> station '+i[1]+' - '+ i[5]+' is null')
@@ -781,7 +812,7 @@ class Eqconvert:
 
         # parallel run
         with concurrent.futures.ThreadPoolExecutor(max_workers=n_cpu) as executor:
-            results = [ executor.submit(work,x=df) for df in split_df ]
+            results = [ executor.submit(work,df=df,dl_channel=dl_channel) for df in split_df ]
             for z in concurrent.futures.as_completed(results):
                 try:
                     df_results.append(z.result())
@@ -800,8 +831,8 @@ class Eqconvert:
         df_failed.drop(labels = 'marker', axis = 1,inplace=True)
         df_downloaded.drop(labels = 'marker', axis = 1,inplace=True)
         # save file
-        df_failed.to_csv(os.path.join(os.path.dirname(path),f'{Path(csv_filename).stem}_failed_to_download.csv'), header=True, index=False)
-        df_downloaded.to_csv(os.path.join(os.path.dirname(path),f'{Path(csv_filename).stem}_downloaded.csv'), header=True, index=False)
+        df_failed.to_csv(os.path.join(os.path.dirname(path),f'{Path(csv_filename).stem}_failed_to_download_{dt.now().strftime("%d%m%y")}.csv'), header=True, index=False)
+        df_downloaded.to_csv(os.path.join(os.path.dirname(path),f'{Path(csv_filename).stem}_downloaded_{dt.now().strftime("%d%m%y")}.csv'), header=True, index=False)
         print('***download finish***')
         
     def checkwaveform(path_wave):

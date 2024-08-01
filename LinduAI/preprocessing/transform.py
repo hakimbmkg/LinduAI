@@ -10,8 +10,8 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 import pandas as pd
-import librosa
-import librosa.display
+# import librosa
+# import librosa.display
 import matplotlib.pyplot as plt
 plt.rcParams['agg.path.chunksize'] = 1000000
 from tqdm import tqdm
@@ -546,60 +546,60 @@ class Transform:
     #be carefull for used ths function, please check again,
     #this function used librosa
     @tf.function
-    def make_spectogram_mags(path):
-        if not os.path.exists(directory+'/input/dataset_EQ/spectogram/'):
-            os.makedirs(directory+'/input/dataset_EQ/spectogram')
-            print('== folder /input/spectogram/dataset_EQ/ created')
+    # def make_spectogram_mags(path):
+    #     if not os.path.exists(directory+'/input/dataset_EQ/spectogram/'):
+    #         os.makedirs(directory+'/input/dataset_EQ/spectogram')
+    #         print('== folder /input/spectogram/dataset_EQ/ created')
 
-        read_csv = pd.read_csv(directory+'/'+path)
-        init_stations = read_csv[['trace_name','source_magnitude']]
-        arr_init_stations = init_stations.to_numpy()
+    #     read_csv = pd.read_csv(directory+'/'+path)
+    #     init_stations = read_csv[['trace_name','source_magnitude']]
+    #     arr_init_stations = init_stations.to_numpy()
 
-        for i in arr_init_stations:
-            if os.path.exists(directory+'/input/dataset_EQ/event/'+i[0]):
-                st = read(directory+'/input/dataset_EQ/event/'+i[0])
-                # print(st.__str__(extended=True))
+    #     for i in arr_init_stations:
+    #         if os.path.exists(directory+'/input/dataset_EQ/event/'+i[0]):
+    #             st = read(directory+'/input/dataset_EQ/event/'+i[0])
+    #             # print(st.__str__(extended=True))
 
-                data = st[0].data.astype('float32')
-                sr = int(st[0].stats.sampling_rate)
-                max_points = int(st[0].stats.npts)
-                offset = 0
+    #             data = st[0].data.astype('float32')
+    #             sr = int(st[0].stats.sampling_rate)
+    #             max_points = int(st[0].stats.npts)
+    #             offset = 0
 
-                hop_length = 128
-                n_fft = 256
-                cmap = 'jet'
-                bins_per_octave = 12
-                auto_aspect = False
-                y_axis = "linear"  # linear or log
-                fmin = None
-                fmax = 5.0
+    #             hop_length = 128
+    #             n_fft = 256
+    #             cmap = 'jet'
+    #             bins_per_octave = 12
+    #             auto_aspect = False
+    #             y_axis = "linear"  # linear or log
+    #             fmin = None
+    #             fmax = 5.0
 
-                # Librosa spectrogram
-                D = librosa.amplitude_to_db(
-                    np.abs(librosa.stft(data, hop_length=hop_length, n_fft=n_fft)), ref=np.max)
+    #             # Librosa spectrogram
+    #             D = librosa.amplitude_to_db(
+    #                 np.abs(librosa.stft(data, hop_length=hop_length, n_fft=n_fft)), ref=np.max)
 
-                fig, ax = plt.subplots()
+    #             fig, ax = plt.subplots()
 
-                img = librosa.display.specshow(D, y_axis=y_axis, sr=sr,
-                                               hop_length=hop_length, x_axis='time', ax=ax, cmap=cmap, bins_per_octave=bins_per_octave,
-                                               auto_aspect=auto_aspect)
+    #             img = librosa.display.specshow(D, y_axis=y_axis, sr=sr,
+    #                                            hop_length=hop_length, x_axis='time', ax=ax, cmap=cmap, bins_per_octave=bins_per_octave,
+    #                                            auto_aspect=auto_aspect)
 
-                if fmin is not None:
-                    fmin0 = fmin
-                else:
-                    fmin0 = 0
+    #             if fmin is not None:
+    #                 fmin0 = fmin
+    #             else:
+    #                 fmin0 = 0
 
-                if fmax is not None:
-                    fmax0 = fmax
-                else:
-                    fmax0 = sr/2
+    #             if fmax is not None:
+    #                 fmax0 = fmax
+    #             else:
+    #                 fmax0 = sr/2
 
-                ax.set_ylim([fmin, fmax])
-                fig.colorbar(img, ax=ax, format="%+2.f dB")
-                plt.savefig(directory+'/input/dataset_EQ/spectogram/'+i[0]+'.png', bbox_inches='tight', dpi=300)
-                plt.close()
+    #             ax.set_ylim([fmin, fmax])
+    #             fig.colorbar(img, ax=ax, format="%+2.f dB")
+    #             plt.savefig(directory+'/input/dataset_EQ/spectogram/'+i[0]+'.png', bbox_inches='tight', dpi=300)
+    #             plt.close()
 
-                continue
+    #             continue
 
     def cp_spectogram(path):
         if not os.path.exists(directory+'/input/dataset/'):

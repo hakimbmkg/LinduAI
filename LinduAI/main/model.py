@@ -7,8 +7,8 @@ Created on Fri Dec 24 07:06:13 2021
 """
 
 import os
-import librosa
-import librosa.display
+# import librosa
+# import librosa.display
 
 from obspy.core.stream import read
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -147,46 +147,46 @@ class Models():
 
         # return history, model
 
-    def predictedstationquality(path, models):
-        # files_path = Path(path)
-        st          = read(path)
-        data        = st[0].data.astype('float32')
-        sr          = int(st[0].stats.sampling_rate)
-        max_points  = int(st[0].stats.npts)
-        Offset      = 0
+    # def predictedstationquality(path, models):
+    #     # files_path = Path(path)
+    #     st          = read(path)
+    #     data        = st[0].data.astype('float32')
+    #     sr          = int(st[0].stats.sampling_rate)
+    #     max_points  = int(st[0].stats.npts)
+    #     Offset      = 0
 
-        hop_length = 128
-        n_fft = 256
-        cmap = 'jet'
-        bins_per_octave = 12
-        auto_aspect = False
-        y_axis = "linear"  # linear or log
-        fmin = None
-        fmax = 5.0
+    #     hop_length = 128
+    #     n_fft = 256
+    #     cmap = 'jet'
+    #     bins_per_octave = 12
+    #     auto_aspect = False
+    #     y_axis = "linear"  # linear or log
+    #     fmin = None
+    #     fmax = 5.0
 
-        # Librosa spectrogram
-        D = librosa.amplitude_to_db(np.abs(librosa.stft(data, hop_length=hop_length, n_fft=n_fft)), ref=np.max)
-        fig, ax = plt.subplots()
-        img = librosa.display.specshow(D, y_axis=y_axis, sr=sr,
-        hop_length=hop_length, x_axis='time', ax=ax, cmap=cmap, bins_per_octave=bins_per_octave,
-        auto_aspect=auto_aspect)
+    #     # Librosa spectrogram
+    #     D = librosa.amplitude_to_db(np.abs(librosa.stft(data, hop_length=hop_length, n_fft=n_fft)), ref=np.max)
+    #     fig, ax = plt.subplots()
+    #     img = librosa.display.specshow(D, y_axis=y_axis, sr=sr,
+    #     hop_length=hop_length, x_axis='time', ax=ax, cmap=cmap, bins_per_octave=bins_per_octave,
+    #     auto_aspect=auto_aspect)
         
-        if fmin is not None:
-            fmin0 = fmin
-        else:
-            fmin0 = 0
+    #     if fmin is not None:
+    #         fmin0 = fmin
+    #     else:
+    #         fmin0 = 0
 
-        if fmax is not None:
-            fmax0 = fmax
-        else:
-            fmax0 = sr/2
+    #     if fmax is not None:
+    #         fmax0 = fmax
+    #     else:
+    #         fmax0 = sr/2
 
-        ax.set_ylim([fmin, fmax])
-        fig.colorbar(img, ax=ax, format="%+2.f dB")
-        file_names = str(datetime.datetime.now())+'.png'
-        plt.savefig(directory+'/input/tmp_files/'+file_names, bbox_inches='tight', dpi=300)
-        plt.close()
-        Models.predicted(directory+'/input/tmp_files/'+file_names, models)
+    #     ax.set_ylim([fmin, fmax])
+    #     fig.colorbar(img, ax=ax, format="%+2.f dB")
+    #     file_names = str(datetime.datetime.now())+'.png'
+    #     plt.savefig(directory+'/input/tmp_files/'+file_names, bbox_inches='tight', dpi=300)
+    #     plt.close()
+    #     Models.predicted(directory+'/input/tmp_files/'+file_names, models)
 
     def predicted(path, models):
         class_names = ['Baik','Buruk','Sedang'] 

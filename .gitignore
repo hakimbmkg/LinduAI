@@ -1,0 +1,8 @@
+# ignore
+
+# ignore credential data
+data/
+
+# ignore main upload
+main.py
+main.ipynb

@@ -55,11 +55,11 @@ Modelsmag.predictedmag('/your/path/CISI.IA_20090616044802.645_EV', 'input/your/m
 
 Cite as
 ```
-Hakim, Arif Rachman. (2022). LinduAI (1.0.0). Zenodo. https://doi.org/10.5281/zenodo.6785556
+Hakim, Arif Rachman and Widyadharma, Putu Hendra. (2022). LinduAI (1.0.0). Zenodo. https://doi.org/10.5281/zenodo.6785556
 ```
 ```
 @software{hakim_arif_rachman_2022_6785556,
-  author       = {Hakim, Arif Rachman},
+  author       = {Hakim, Arif Rachman and Widyadharma, Putu Hendra},
   title        = {LinduAI},
   month        = jun,
   year         = 2022,

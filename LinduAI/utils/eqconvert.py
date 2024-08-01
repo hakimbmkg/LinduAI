@@ -349,6 +349,20 @@ class Eqconvert:
                 json.dump(stations, file_)
                
     def _arrivalconvert_(dataset_path,arrival_fname,format="stead"):
+        """
+        This is a function for reformating arrival2 format seiscomp to STEAD CSV / pha TomoDD 
+        header of DataFrame/CSV reffer from STEAD, please follow :
+        Mousavi, S. M., Sheng, Y., Zhu, W., Beroza G.C., (2019). 
+        STanford EArthquake Dataset (STEAD): A Global Data Set of Seismic Signals for AI, IEEE Access, 
+        doi:10.1109/ACCESS.2019.2947848
+        https://github.com/smousavi05/STEAD
+        
+        Parameters      : \n
+        dataset_path    : [str-path] path to dataset folder
+        arrival_fname   : [str] input arrival filename 
+        format          : [str] output format, choose from "stead" or "pha"
+        
+        """
         # inner function
         def _change_trigger(bool_d, name):
             bool_d = bool_d.fromkeys(bool_d,False)
